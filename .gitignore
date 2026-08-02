@@ -1,0 +1,27 @@
+# Environment variables & secrets
+.env
+*.env
+
+# Application Data & SQLite
+data/*
+!data/.gitkeep
+
+# Python cache & build outputs
+__pycache__/
+*.pyc
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE & OS files
+.idea/
+.vscode/
+.DS_Store
+*.swp
+
+# SQLite
+*.db
+*.sqlite
+*.sqlite3

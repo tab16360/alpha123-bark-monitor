@@ -1,0 +1,11 @@
+services:
+  alpha-monitor:
+    build: .
+    container_name: alpha123-bark-monitor
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./data:/data
+    ports:
+      - "8080:8080"

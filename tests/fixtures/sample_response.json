@@ -1,0 +1,32 @@
+{
+  "airdrops": [
+    {
+      "id": "evt_1001",
+      "project_name": "Test Project A",
+      "points": "180",
+      "reward": "50 TOKEN",
+      "start_time": "2026-08-02T20:54:36+08:00",
+      "status": "upcoming",
+      "detail_url": "https://alpha123.uk/project/test-a"
+    },
+    {
+      "id": "evt_1002",
+      "project_name": "Test Project B",
+      "points": "500",
+      "reward": "100 USDT",
+      "start_time": 1785673824,
+      "status": "active",
+      "detail_url": "https://alpha123.uk/project/test-b"
+    },
+    {
+      "id": "evt_1003",
+      "project_name": "Test Project C",
+      "points": "1000",
+      "reward": "10 BNB",
+      "start_time": 1785673824000,
+      "status": "upcoming",
+      "detail_url": "https://external.com/unsafe-link"
+    }
+  ],
+  "top3_tokens": []
+}
