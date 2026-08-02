@@ -29,9 +29,9 @@ RUN useradd -m -u 1000 appuser && \
 
 USER appuser
 
-EXPOSE 8080
+EXPOSE 18181
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health')" || exit 1
+  CMD python -c "import os, urllib.request; port=os.getenv('HEALTH_SERVER_PORT', '18181'); urllib.request.urlopen(f'http://127.0.0.1:{port}/health')" || exit 1
 
 CMD ["python", "-m", "app.main", "run"]

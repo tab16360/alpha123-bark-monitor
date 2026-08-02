@@ -101,7 +101,7 @@ docker compose logs -f
 ### 查看容器健康状态
 ```bash
 docker compose ps
-curl http://localhost:8080/health
+curl http://localhost:18181/health
 ```
 
 ### 更新程序

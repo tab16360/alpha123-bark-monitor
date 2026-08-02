@@ -66,7 +66,7 @@ class HealthHTTPRequestHandler(BaseHTTPRequestHandler):
         pass
 
 
-def start_health_server(port: int = 8080) -> Optional[HTTPServer]:
+def start_health_server(port: int = 18181) -> Optional[HTTPServer]:
     """Start lightweight health HTTP server in a daemon thread."""
     try:
         server = HTTPServer(("0.0.0.0", port), HealthHTTPRequestHandler)

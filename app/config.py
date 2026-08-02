@@ -81,7 +81,7 @@ class Settings:
         default_factory=lambda: _get_bool("HEALTH_SERVER_ENABLED", True)
     )
     health_server_port: int = field(
-        default_factory=lambda: _get_int("HEALTH_SERVER_PORT", 8080)
+        default_factory=lambda: _get_int("HEALTH_SERVER_PORT", 18181)
     )
 
 
