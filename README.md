@@ -84,9 +84,13 @@ python -m app.main test-bark
 
 ## 🐳 Docker Compose 启动与维护
 
-### 启动服务
+### 启动与重新加载配置
 ```bash
+# 首次启动服务
 docker compose up -d
+
+# 修改 .env 配置文件后强制重新创建容器生效
+docker compose up -d --force-recreate
 ```
 
 ### 查看实时日志
