@@ -20,18 +20,18 @@ RUN pip install --no-cache-dir --default-timeout=120 -i ${PIP_INDEX_URL} --upgra
 
 # Copy application source code
 COPY app/ ./app/
-COPY README.md pytest.ini ./
+COPY README.md pytest.ini docker-entrypoint.sh ./
 
-# Create non-root user and data directory
+# Create non-root user and set permissions
 RUN useradd -m -u 1000 appuser && \
     mkdir -p /data /data/debug && \
+    chmod +x /app/docker-entrypoint.sh && \
     chown -R appuser:appuser /app /data
-
-USER appuser
 
 EXPOSE 18181
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD python -c "import os, urllib.request; port=os.getenv('HEALTH_SERVER_PORT', '18181'); urllib.request.urlopen(f'http://127.0.0.1:{port}/health')" || exit 1
 
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["python", "-m", "app.main", "run"]

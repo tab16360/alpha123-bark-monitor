@@ -20,12 +20,24 @@ class Database:
     def _ensure_dir(self) -> None:
         db_dir = os.path.dirname(os.path.abspath(self.db_path))
         if db_dir and not os.path.exists(db_dir):
-            os.makedirs(db_dir, exist_ok=True)
+            try:
+                os.makedirs(db_dir, exist_ok=True)
+            except Exception as e:
+                logger.error(f"Failed to create database directory {db_dir}: {e}")
 
     def get_connection(self) -> sqlite3.Connection:
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
-        return conn
+        self._ensure_dir()
+        try:
+            conn = sqlite3.connect(self.db_path)
+            conn.row_factory = sqlite3.Row
+            return conn
+        except sqlite3.OperationalError as e:
+            db_dir = os.path.dirname(os.path.abspath(self.db_path))
+            logger.error(
+                f"SQLite OperationalError opening database '{self.db_path}'. "
+                f"Directory '{db_dir}' permission error? Error detail: {e}"
+            )
+            raise
 
     def init_db(self) -> None:
         """Create tables if they do not exist."""
