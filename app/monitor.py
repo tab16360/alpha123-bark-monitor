@@ -130,9 +130,15 @@ class MonitorService:
 
         # Step 3: Handle empty parsing / Schema change protection
         if len(events) == 0:
-            if len(old_events) > 0:
+            is_schema_anomaly = (
+                len(old_events) > 0 and not summary.get("valid_list_found", False)
+            ) or (
+                summary.get("total_failed", 0) > 0
+            )
+
+            if is_schema_anomaly:
                 logger.warning(
-                    "API request succeeded but zero events parsed while database has existing events! Possible schema change."
+                    "API request succeeded but zero events parsed while database has existing events or items failed parsing! Possible schema change."
                 )
                 self.save_debug_sample(raw_payload)
                 self.notifier.send(
@@ -141,6 +147,7 @@ class MonitorService:
                 )
             else:
                 logger.info("No airdrop events currently returned by API.")
+
 
         # Step 4: Process First Run vs Normal Run
         if self.is_first_run:

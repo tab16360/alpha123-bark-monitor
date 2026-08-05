@@ -173,6 +173,7 @@ def parse_airdrop_data(payload: Any) -> Tuple[List[AirdropEvent], Dict[str, Any]
         "top_keys": [],
         "total_parsed": 0,
         "total_failed": 0,
+        "valid_list_found": False,
     }
 
     raw_items: List[Any] = []
@@ -183,16 +184,19 @@ def parse_airdrop_data(payload: Any) -> Tuple[List[AirdropEvent], Dict[str, Any]
         for key in ["airdrops", "data", "items", "projects", "list", "events"]:
             if key in payload and isinstance(payload[key], list):
                 raw_items = payload[key]
+                summary["valid_list_found"] = True
                 break
         else:
             # If dictionary itself has list values or nested lists
             for k, v in payload.items():
                 if isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict):
                     raw_items = v
+                    summary["valid_list_found"] = True
                     break
 
     elif isinstance(payload, list):
         raw_items = payload
+        summary["valid_list_found"] = True
 
     for item in raw_items:
         if isinstance(item, list):
@@ -212,3 +216,4 @@ def parse_airdrop_data(payload: Any) -> Tuple[List[AirdropEvent], Dict[str, Any]
 
     summary["total_parsed"] = len(events)
     return events, summary
+

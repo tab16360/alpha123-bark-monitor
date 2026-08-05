@@ -120,8 +120,8 @@ def test_schema_change_protection_does_not_clear_db(temp_db):
 
     mock_notifier.reset_mock()
 
-    # API returns 200 OK but empty list (or unrecognized keys)
-    mock_client.fetch_raw_data.return_value = {"airdrops": []}
+    # API returns 200 OK but unrecognized keys (e.g. schema changed)
+    mock_client.fetch_raw_data.return_value = {"unrecognized_key": 123}
     service.run_once()
 
     # Database MUST NOT be cleared
@@ -129,3 +129,34 @@ def test_schema_change_protection_does_not_clear_db(temp_db):
     # Schema change alert should be sent
     assert mock_notifier.send.call_count == 1
     assert "⚠️ Alpha123 数据结构可能变化" in mock_notifier.send.call_args[1]["title"]
+
+
+def test_valid_empty_airdrops_does_not_trigger_schema_alert(temp_db):
+    mock_notifier = MagicMock(spec=BarkNotifier)
+    mock_notifier.send.return_value = True
+
+    mock_client = MagicMock()
+    mock_client.fetch_raw_data.return_value = {
+        "airdrops": [{"id": "e1", "project_name": "Project 1"}]
+    }
+
+    service = MonitorService(db=temp_db, alpha_client=mock_client, notifier=mock_notifier)
+    service.setup()
+    service.run_once()
+    assert temp_db.get_event_count() == 1
+
+    mock_notifier.reset_mock()
+
+    # API returns valid payload with empty "airdrops" array
+    mock_client.fetch_raw_data.return_value = {
+        "airdrops": [],
+        "alpha_checkins": [],
+        "bnb_price_usd": 599.15
+    }
+    service.run_once()
+
+    # Database retains existing events
+    assert temp_db.get_event_count() == 1
+    # NO schema change alert should be sent
+    assert mock_notifier.send.call_count == 0
+
