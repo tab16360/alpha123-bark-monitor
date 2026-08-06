@@ -81,7 +81,10 @@ def _timestamp_to_datetime(val: Union[int, float]) -> datetime:
 def _extract_field(item: Dict[str, Any], candidates: List[str]) -> Optional[Any]:
     for key in candidates:
         if key in item and item[key] is not None:
-            return item[key]
+            val = item[key]
+            if isinstance(val, str) and not val.strip():
+                continue
+            return val
     return None
 
 
@@ -93,16 +96,23 @@ def parse_airdrop_item(raw_item: Dict[str, Any]) -> Optional[AirdropEvent]:
 
     # Project Name candidates
     name = _extract_field(
-        raw_item, ["project_name", "projectName", "name", "project", "symbol", "title"]
+        raw_item, ["project_name", "projectName", "name", "project", "symbol", "token", "title"]
     )
     if not name:
-        logger.warning(f"Skipping item due to missing project name: {raw_item}")
-        return None
+        if raw_item.get("box") or raw_item.get("quota_type") == "box":
+            name = "神秘盲盒"
+        elif raw_item.get("quota_event_id"):
+            name = f"盲盒任务 ({raw_item.get('quota_event_id')})"
+        elif raw_item.get("type"):
+            name = f"空投项目 ({raw_item.get('type')})"
+        else:
+            name = "未命名空投"
+
     project_name = str(name).strip()
 
     # ID candidates
     raw_id = _extract_field(
-        raw_item, ["event_id", "id", "eventId", "project_id", "projectId"]
+        raw_item, ["event_id", "id", "eventId", "project_id", "projectId", "quota_event_id"]
     )
 
     # Points candidates
@@ -115,21 +125,42 @@ def parse_airdrop_item(raw_item: Dict[str, Any]) -> Optional[AirdropEvent]:
     reward = _extract_field(
         raw_item, ["reward", "amount", "tokens", "pool", "prize", "airdrop_amount"]
     )
+    if not reward:
+        quota = raw_item.get("total_quota")
+        if quota and str(quota).strip():
+            reward = f"盲盒 (全网额度 {str(quota).strip()})"
+        elif raw_item.get("box") or raw_item.get("quota_type") == "box":
+            reward = "神秘盲盒"
+
     reward_str = str(reward).strip() if reward is not None else None
 
     # Start Time candidates
-    raw_time = _extract_field(
-        raw_item,
-        [
-            "start_time",
-            "startTime",
-            "start_at",
-            "airdrop_time",
-            "time",
-            "date",
-            "claim_time",
-        ],
-    )
+    date_val = raw_item.get("date")
+    time_val = raw_item.get("time")
+    if (
+        date_val
+        and time_val
+        and isinstance(date_val, str)
+        and isinstance(time_val, str)
+        and date_val.strip()
+        and time_val.strip()
+    ):
+        raw_time = f"{date_val.strip()} {time_val.strip()}"
+    else:
+        raw_time = _extract_field(
+            raw_item,
+            [
+                "start_time",
+                "startTime",
+                "start_at",
+                "airdrop_time",
+                "time",
+                "date",
+                "claim_time",
+                "quota_received_at",
+                "created_timestamp",
+            ],
+        )
     start_time = parse_datetime(raw_time)
 
     # Status candidates
@@ -159,6 +190,7 @@ def parse_airdrop_item(raw_item: Dict[str, Any]) -> Optional[AirdropEvent]:
         status=status_str,
         detail_url=detail_url_str,
     )
+
 
 
 def parse_airdrop_data(payload: Any) -> Tuple[List[AirdropEvent], Dict[str, Any]]:

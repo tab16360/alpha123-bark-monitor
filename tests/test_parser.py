@@ -101,3 +101,40 @@ def test_safe_detail_url():
         detail_url="http://alpha123.uk/insecure",
     )
     assert evt_http.safe_detail_url() == "https://alpha123.uk/"
+
+
+def test_parse_mystery_box_item():
+    raw = {
+        "token": "",
+        "date": "2026-08-06",
+        "time": "19:00",
+        "points": "245",
+        "type": "grab",
+        "phase": 1,
+        "language": "zh",
+        "status": "announced",
+        "box": True,
+        "futures_listed": False,
+        "amount": "",
+        "name": "",
+        "created_timestamp": 1786006875,
+        "updated_timestamp": 1786007946,
+        "system_timestamp": 1786007946,
+        "total_quota": "13316",
+        "quota_event_id": "mystery_box_6a7462413de700.47565405",
+        "quota_type": "box",
+        "quota_source": "telegram_binance_velocity_cn",
+        "quota_received_at": "2026-08-06 18:30:25",
+        "quota_expires_at": "2026-08-06 19:30:00",
+    }
+    events, summary = parse_airdrop_data({"airdrops": [raw]})
+    assert len(events) == 1
+    evt = events[0]
+    assert evt.event_id == "mystery_box_6a7462413de700.47565405"
+    assert evt.project_name == "神秘盲盒"
+    assert evt.points == "245"
+    assert "13316" in evt.reward
+    assert evt.start_time is not None
+    assert evt.start_time.year == 2026 and evt.start_time.month == 8 and evt.start_time.day == 6 and evt.start_time.hour == 19
+    assert evt.status == "announced"
+
