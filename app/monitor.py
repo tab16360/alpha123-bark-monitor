@@ -101,13 +101,17 @@ class MonitorService:
                 f"Alpha123 API fetch error (Consecutive failures: {self.consecutive_failures}): {err}"
             )
 
-            if self.consecutive_failures >= 3 and not self.outage_alert_sent:
+            if (
+                self.consecutive_failures >= settings.max_consecutive_failures
+                and not self.outage_alert_sent
+            ):
                 self.notifier.send(
                     title="⚠️ Alpha123 数据获取失败",
-                    body="接口已经连续失败 3 次，请检查网络或接口状态。",
+                    body=f"接口已经连续失败 {settings.max_consecutive_failures} 次，请检查网络或接口状态。",
                 )
                 self.outage_alert_sent = True
             return
+
 
         # Handle Outage Recovery
         if self.outage_alert_sent:

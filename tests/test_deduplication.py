@@ -160,3 +160,43 @@ def test_valid_empty_airdrops_does_not_trigger_schema_alert(temp_db):
     # NO schema change alert should be sent
     assert mock_notifier.send.call_count == 0
 
+
+def test_consecutive_failures_alert(temp_db):
+    from app.alpha_client import AlphaClientError
+    from app.config import settings
+
+    mock_notifier = MagicMock(spec=BarkNotifier)
+    mock_notifier.send.return_value = True
+
+    mock_client = MagicMock()
+    mock_client.fetch_raw_data.side_effect = AlphaClientError("HTTP 403 Forbidden")
+
+    service = MonitorService(db=temp_db, alpha_client=mock_client, notifier=mock_notifier)
+    service.setup()
+    service.is_first_run = False
+
+    # Fail MAX_CONSECUTIVE_FAILURES - 1 times (9 times by default)
+
+    for _ in range(settings.max_consecutive_failures - 1):
+        service.run_once()
+        assert mock_notifier.send.call_count == 0
+
+    # 10th failure triggers the alert
+    service.run_once()
+    assert mock_notifier.send.call_count == 1
+    assert "⚠️ Alpha123 数据获取失败" in mock_notifier.send.call_args[1]["title"]
+    assert f"接口已经连续失败 {settings.max_consecutive_failures} 次" in mock_notifier.send.call_args[1]["body"]
+
+    # Subsequent failures do not re-send
+    mock_notifier.reset_mock()
+    service.run_once()
+    assert mock_notifier.send.call_count == 0
+
+    # Recovery
+    mock_client.fetch_raw_data.side_effect = None
+    mock_client.fetch_raw_data.return_value = {"airdrops": []}
+    service.run_once()
+    assert mock_notifier.send.call_count == 1
+    assert "✅ Alpha123 数据恢复" in mock_notifier.send.call_args[1]["title"]
+
+

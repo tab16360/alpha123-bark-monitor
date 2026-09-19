@@ -5,6 +5,8 @@ import logging
 import threading
 from typing import Callable, Dict, Optional, Union
 
+from app.config import settings
+
 logger = logging.getLogger("alpha_monitor.health")
 
 
@@ -36,11 +38,12 @@ class HealthState:
                     evt_count = 0
 
             return {
-                "status": "ok" if self.consecutive_failures < 3 else "warning",
+                "status": "ok" if self.consecutive_failures < settings.max_consecutive_failures else "warning",
                 "last_success_at": self.last_success_at or "",
                 "consecutive_failures": self.consecutive_failures,
                 "event_count": evt_count,
             }
+
 
 
 global_health_state = HealthState()

@@ -60,9 +60,13 @@ class Settings:
     poll_interval_seconds: int = field(
         default_factory=lambda: _get_int("POLL_INTERVAL_SECONDS", 20)
     )
+    max_consecutive_failures: int = field(
+        default_factory=lambda: _get_int("MAX_CONSECUTIVE_FAILURES", 10)
+    )
     timezone: str = field(
         default_factory=lambda: os.getenv("TIMEZONE", "Asia/Shanghai").strip()
     )
+
     notify_existing_on_first_run: bool = field(
         default_factory=lambda: _get_bool("NOTIFY_EXISTING_ON_FIRST_RUN", False)
     )
